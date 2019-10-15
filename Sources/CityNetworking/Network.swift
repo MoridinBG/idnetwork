@@ -6,15 +6,10 @@
 //
 
 import Foundation
+import PromiseKit
 
 protocol Network {
-    func request<T: Codable>(endpoint: Endpoint,
-                 handler: @escaping (Result<T, NetworkError>) -> ()) -> NetworkRequest
-}
-
-enum NetworkError: Error {
-    case statusCode(Int)
-    case other(Error)
+    func request<T: Codable>(endpoint: Endpoint) -> Promise<T>
 }
 
 class DefaultNetwork: Network {
@@ -24,27 +19,13 @@ class DefaultNetwork: Network {
         self.provider = provider
     }
     
-    func request<T: Codable>(endpoint: Endpoint,
-                             handler: @escaping (Result<T, NetworkError>) -> ()) -> NetworkRequest {
-
-        return provider.request(endpoint: endpoint, dataHandler: { result in
-            switch result {
-            case .failure(let error):
-                handler(Result.failure(.other(error)))
-
-            case .success(let (response, data)):
-                guard response.statusCode >= 200 && response.statusCode < 300 else {
-                    handler(Result.failure(.statusCode(response.statusCode)))
-                    return
-                }
-                
-                do {
+    func request<T: Codable>(endpoint: Endpoint) -> Promise<T> {
+        provider.request(endpoint: endpoint)
+            .then({ (response, data)  in
+                return Promise { resolver in
                     let model = try JSONDecoder().decode(T.self, from: data)
-                    handler(Result.success(model))
-                } catch {
-                    handler(Result.failure(.other(error)))
+                    resolver.fulfill(model)
                 }
-            }
-        })
+            })
     }
 }

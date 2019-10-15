@@ -6,13 +6,14 @@
 //
 
 import Foundation
+import PromiseKit
 
 protocol NetworkProvider {
-    func request(endpoint: Endpoint, dataHandler: @escaping (_ result: Result<(HTTPURLResponse, Data), NetworkProviderError>) -> ()) -> NetworkRequest
-    func request(endpoint: Endpoint, responseHandler: @escaping (_ result: Result<HTTPURLResponse, NetworkProviderError>) -> ()) -> NetworkRequest
+    func request(endpoint: Endpoint) -> Promise<(HTTPURLResponse, Data)>
 }
 
-enum NetworkProviderError: Error {
+enum NetworkError: Error {
+    case statusCode(Int)
     case badResponse
     case noConnection
     case error(Error)

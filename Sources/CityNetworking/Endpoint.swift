@@ -14,7 +14,6 @@ protocol Endpoint {
     var parameters: [String : Any]? { get }
     var encoding: NetworkRequestParameterEncoding { get }
     var headers: [String : String]? { get }
-    var authenticated: Bool { get }
 }
 
 enum HTTPMethod: String {
