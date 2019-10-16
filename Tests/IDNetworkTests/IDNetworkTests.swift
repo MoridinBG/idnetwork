@@ -1,5 +1,5 @@
 import XCTest
-@testable import CityNetworking
+@testable import IDNetwork
 
 struct EndpointStub: Endpoint {
     let baseURL: String
@@ -10,7 +10,7 @@ struct EndpointStub: Endpoint {
     let headers: [String : String]?
 }
 
-final class CityNetworkingTests: XCTestCase {
+final class IDNetworkTests: XCTestCase {
     func testBrokenUrl() {
         let endpoint = EndpointStub(baseURL: "",
                                     path: "",

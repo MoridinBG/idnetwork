@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  Endpoint+URLRequest.swift
 //  
 //
 //  Created by Ivan Dilchovski on 14.10.19.

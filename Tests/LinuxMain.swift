@@ -1,7 +1,7 @@
 import XCTest
 
-import CityNetworkingTests
+import IDNetworkTests
 
 var tests = [XCTestCaseEntry]()
-tests += CityNetworkingTests.allTests()
+tests += IDNetworkTests.allTests()
 XCTMain(tests)

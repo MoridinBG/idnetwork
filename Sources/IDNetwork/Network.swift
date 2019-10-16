@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  Network.swift
 //  
 //
 //  Created by Ivan Dilchovski on 14.10.19.
@@ -10,6 +10,7 @@ import PromiseKit
 
 public protocol Network {
     func request<T: Codable>(endpoint: Endpoint) -> Promise<T>
+    func request(endpoint: Endpoint) -> Promise<HTTPURLResponse>
 }
 
 public class DefaultNetwork: Network {
@@ -27,5 +28,10 @@ public class DefaultNetwork: Network {
                     resolver.fulfill(model)
                 }
             })
+    }
+    
+    public func request(endpoint: Endpoint) -> Promise<HTTPURLResponse> {
+        return provider.request(endpoint: endpoint)
+            .map({ (response, _) in return response })
     }
 }
