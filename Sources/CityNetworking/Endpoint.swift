@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol Endpoint {
+public protocol Endpoint {
     var baseURL: String { get }
     var path: String { get }
     var method: HTTPMethod { get }
@@ -16,14 +16,14 @@ protocol Endpoint {
     var headers: [String : String]? { get }
 }
 
-enum HTTPMethod: String {
+public enum HTTPMethod: String {
     case get
     case post
     case put
     case delete
 }
 
-enum NetworkRequestParameterEncoding {
+public enum NetworkRequestParameterEncoding {
     case json
     case url
 }

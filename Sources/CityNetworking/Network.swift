@@ -8,20 +8,20 @@
 import Foundation
 import PromiseKit
 
-protocol Network {
+public protocol Network {
     func request<T: Codable>(endpoint: Endpoint) -> Promise<T>
 }
 
-class DefaultNetwork: Network {
+public class DefaultNetwork: Network {
     private let provider: NetworkProvider
     
-    init(provider: NetworkProvider = URLSessionNetworkProvider()) {
+    public init(provider: NetworkProvider = URLSessionNetworkProvider()) {
         self.provider = provider
     }
     
-    func request<T: Codable>(endpoint: Endpoint) -> Promise<T> {
+    public func request<T: Codable>(endpoint: Endpoint) -> Promise<T> {
         provider.request(endpoint: endpoint)
-            .then({ (response, data)  in
+            .then({ (_, data)  in
                 return Promise { resolver in
                     let model = try JSONDecoder().decode(T.self, from: data)
                     resolver.fulfill(model)

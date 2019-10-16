@@ -8,10 +8,10 @@
 import Foundation
 
 // Contains extensive amounts of code from Alamofire's ParameterEncoding.swift
-extension Endpoint {
-    var request: URLRequest {
+public extension Endpoint {
+    var request: URLRequest? {
         guard let url = URL(string: baseURL + path) else {
-            fatalError("Broken endpoint url string")
+            return nil
         }
 
         var request = URLRequest(url: url)
