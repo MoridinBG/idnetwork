@@ -15,8 +15,8 @@ public class URLSessionNetworkProvider: NetworkProvider {
         self.session = URLSession(configuration: configuration)
     }
 
-    public func request(endpoint: Endpoint) -> Promise<(HTTPURLResponse, Data)> {
-        return Promise { resolver in
+    public func request(endpoint: Endpoint) -> CancellablePromise<(HTTPURLResponse, Data)> {
+        return CancellablePromise { resolver in
             guard let request = endpoint.request else {
                 resolver.reject(NetworkError.badRequest)
                 return

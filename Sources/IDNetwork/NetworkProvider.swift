@@ -9,7 +9,7 @@ import Foundation
 import PromiseKit
 
 public protocol NetworkProvider {
-    func request(endpoint: Endpoint) -> Promise<(HTTPURLResponse, Data)>
+    func request(endpoint: Endpoint) -> CancellablePromise<(HTTPURLResponse, Data)>
 }
 
 public enum NetworkError: Error {
