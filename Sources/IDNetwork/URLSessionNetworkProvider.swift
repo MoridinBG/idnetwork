@@ -8,15 +8,24 @@
 import Foundation
 import PromiseKit
 
+
+extension URLSessionTask: WorkItem {
+    var isRunning: Bool { return state == .running }
+}
+
+
 public class URLSessionNetworkProvider: NetworkProvider {
     fileprivate let session: URLSession
 
     public init(configuration: URLSessionConfiguration = .default) {
         self.session = URLSession(configuration: configuration)
     }
-
+    
     public func request(endpoint: Endpoint) -> CancellablePromise<(HTTPURLResponse, Data)> {
-        return CancellablePromise { resolver in
+        // Wrap the underlying URLSessionTask in to a Cancellable and pass it to the CancellablePromise
+        // If the promise is cancelled, it will call cancel() on the provided Cancellable which can then stop the underlying task
+        let cancellebleWorkItem = CancellebleWorkItemWrapper()
+        return CancellablePromise(cancellable: cancellebleWorkItem) { resolver in
             guard let request = endpoint.request else {
                 resolver.reject(NetworkError.badRequest)
                 return
@@ -45,7 +54,8 @@ public class URLSessionNetworkProvider: NetworkProvider {
                     resolver.fulfill((response, data))
                 }
             }
-
+            cancellebleWorkItem.workItem = task
+            
             task.resume()
         }
     }
