@@ -2,54 +2,34 @@ import XCTest
 @testable import IDNetwork
 
 struct EndpointStub: Endpoint {
-    let baseURL: String
-    let path: String
-    let method: HTTPMethod
-    let parameters: [String : Any]?
-    let encoding: NetworkRequestParameterEncoding
-    let headers: [String : String]?
+    var baseURL: String = "http://example.com"
+    var path: String = ""
+    var method: HTTPMethod = .get
+    var parameters: [String : Any]? = nil
+    var encoding: NetworkRequestParameterEncoding = .url
+    var headers: [String : String]? = nil
 }
 
-final class IDNetworkTests: XCTestCase {
+final class EndpointRequestTests: XCTestCase {
     func testBrokenUrl() {
-        let endpoint = EndpointStub(baseURL: "",
-                                    path: "",
-                                    method: .get,
-                                    parameters: nil,
-                                    encoding: .json,
-                                    headers: nil)
+        let endpoint = EndpointStub(baseURL: "")
         XCTAssertNil(endpoint.request, "asd is not a proper url")
     }
     
     func testUrl() {
-        let base = "example.com"
-        let path = "/foo"
-        let endpoint = EndpointStub(baseURL: base,
-                                    path: path,
-                                    method: .get,
-                                    parameters: nil,
-                                    encoding: .json,
-                                    headers: nil)
+        let endpoint = EndpointStub()
         
         guard let request = endpoint.request else {
             XCTAssert(false, "Request should be valid")
             return
         }
         
-        XCTAssertEqual(request.url, URL(string: base + path), "Request url does not match")
+        XCTAssertEqual(request.url, URL(string: endpoint.baseURL + endpoint.path), "Request url does not match")
     }
     
     func testHTTPMethod() {
-        let method = HTTPMethod.get
-        let endpoint = EndpointStub(baseURL: "example.com",
-                                    path: "",
-                                    method: method,
-                                    parameters: [
-                                        "foo" : 1,
-                                        "bar" : "foobar",
-                                        "isBar" : true],
-                                    encoding: .url,
-                                    headers: nil)
+        let method = HTTPMethod.post
+        let endpoint = EndpointStub(method: method)
         
         guard let request = endpoint.request else {
             XCTAssert(false, "Request should be valid")
@@ -62,15 +42,13 @@ final class IDNetworkTests: XCTestCase {
     
     // TODO: Test escaping and more types in the parameters dictionary (nested dictionary, array, etc)
     func testUrlEncoding() {
-        let endpoint = EndpointStub(baseURL: "example.com",
-        path: "",
-        method: .get,
-        parameters: [
+        let parameters: [String : Any] = [
             "foo" : 1,
             "bar" : "foobar",
-            "isBar" : true],
-        encoding: .url,
-        headers: nil)
+            "isBar" : true
+        ]
+        let endpoint = EndpointStub(parameters: parameters,
+                                    encoding: .url)
         
         XCTAssertNotNil(endpoint.request, "Request should be valid")
         guard let url = endpoint.request?.url else {
@@ -96,13 +74,8 @@ final class IDNetworkTests: XCTestCase {
             "bar" : "foobar",
             "isBar" : true
         ]
-        
-        let endpoint = EndpointStub(baseURL: "example.com",
-        path: "",
-        method: .get,
-        parameters: parameters,
-        encoding: .json,
-        headers: nil)
+        let endpoint = EndpointStub(parameters: parameters,
+                                    encoding: .json)
         
         guard let request = endpoint.request else {
             XCTAssert(false, "Request should be valid")

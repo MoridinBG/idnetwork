@@ -3,5 +3,5 @@ import XCTest
 import IDNetworkTests
 
 var tests = [XCTestCaseEntry]()
-tests += IDNetworkTests.allTests()
+tests += EndpointRequestTests.allTests()
 XCTMain(tests)
