@@ -6,10 +6,10 @@ import PackageDescription
 let package = Package(
     name: "IDNetwork",
     platforms: [
-    .iOS("10.0"),
-    .macOS("10.12"),
-    .tvOS(.v10),
-    .watchOS(.v2)
+        .iOS("10.0"),
+        .macOS("10.12"),
+        .tvOS(.v10),
+        .watchOS(.v2)
     ],
     products: [
         // Products define the executables and libraries produced by a package, and make them visible to other packages.

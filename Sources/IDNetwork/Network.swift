@@ -9,7 +9,7 @@ import Foundation
 import PromiseKit
 
 public protocol Network {
-    func request<T: Codable>(endpoint: Endpoint) -> CancellablePromise<T>
+    func request<T: Decodable>(endpoint: Endpoint) -> CancellablePromise<T>
     func request(endpoint: Endpoint) -> CancellablePromise<HTTPURLResponse>
 }
 
@@ -20,7 +20,7 @@ public class DefaultNetwork: Network {
         self.provider = provider
     }
     
-    public func request<T: Codable>(endpoint: Endpoint) -> CancellablePromise<T> {
+    public func request<T: Decodable>(endpoint: Endpoint) -> CancellablePromise<T> {
         return provider.request(endpoint: endpoint)
             .then({ (_, data)  in
                 return Promise { resolver in

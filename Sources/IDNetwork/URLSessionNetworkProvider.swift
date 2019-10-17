@@ -22,7 +22,7 @@ public class URLSessionNetworkProvider: NetworkProvider {
     }
     
     public func request(endpoint: Endpoint) -> CancellablePromise<(HTTPURLResponse, Data)> {
-        // Wrap the underlying URLSessionTask in to a Cancellable and pass it to the CancellablePromise
+        // Wrap the underlying URLSessionTask into a Cancellable and pass it to the CancellablePromise
         // If the promise is cancelled, it will call cancel() on the provided Cancellable which can then stop the underlying task
         let cancellebleWorkItem = CancellebleWorkItemWrapper()
         return CancellablePromise(cancellable: cancellebleWorkItem) { resolver in
