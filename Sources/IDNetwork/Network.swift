@@ -22,11 +22,8 @@ public class DefaultNetwork: Network {
     
     public func requestDecoded<T: Decodable>(endpoint: Endpoint, decoder: JSONDecoder) -> CancellablePromise<T> {
         return provider.request(endpoint: endpoint)
-            .then({ (_, data)  in
-                return Promise { resolver in
-                    let model = try decoder.decode(T.self, from: data)
-                    resolver.fulfill(model)
-                }
+            .map({ _, data in
+                return try decoder.decode(T.self, from: data)
             })
     }
     
