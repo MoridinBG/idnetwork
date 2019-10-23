@@ -8,9 +8,10 @@
 import Foundation
 import PromiseKit
 
-
-extension URLSessionTask: WorkItem {
-    var isRunning: Bool { return state == .running }
+extension URLSessionTask: Cancellable {
+    public var isCancelled: Bool {
+        return state != .running
+    }
 }
 
 
@@ -22,16 +23,17 @@ public class URLSessionNetworkProvider: NetworkProvider {
     }
     
     public func request(endpoint: Endpoint) -> CancellablePromise<(HTTPURLResponse, Data)> {
-        // Wrap the underlying URLSessionTask into a Cancellable and pass it to the CancellablePromise
-        // If the promise is cancelled, it will call cancel() on the provided Cancellable which can then stop the underlying task
-        let cancellebleWorkItem = CancellebleWorkItemWrapper()
-        return CancellablePromise(cancellable: cancellebleWorkItem) { resolver in
+        var task: URLSessionTask?
+        var reject: ((Error) -> Void)?
+        
+        let promise: CancellablePromise<(HTTPURLResponse, Data)> = CancellablePromise { resolver in
             guard let request = endpoint.request else {
                 resolver.reject(NetworkError.badRequest)
                 return
             }
+            reject = resolver.reject
             
-            let task = session.dataTask(with: request) { data, response, error in
+            task = session.dataTask(with: request) { data, response, error in
                 DispatchQueue.main.async {
                     guard let data = data, let response = response as? HTTPURLResponse else {
                         if let error = error as NSError? {
@@ -54,9 +56,14 @@ public class URLSessionNetworkProvider: NetworkProvider {
                     resolver.fulfill((response, data))
                 }
             }
-            cancellebleWorkItem.workItem = task
             
-            task.resume()
+            task!.resume()
         }
+        
+        if let task = task, let reject = reject {
+            promise.appendCancellable(task, reject: reject)
+        }
+        
+        return promise
     }
 }
