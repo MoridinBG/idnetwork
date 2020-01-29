@@ -25,7 +25,6 @@ public class URLSessionNetworkProvider: NetworkProvider {
     public func request(endpoint: Endpoint) -> CancellablePromise<(HTTPURLResponse, Data)> {
         var task: URLSessionTask?
         var reject: ((Error) -> Void)?
-        
         let promise: CancellablePromise<(HTTPURLResponse, Data)> = CancellablePromise { resolver in
             guard let request = endpoint.request else {
                 resolver.reject(NetworkError.badRequest)

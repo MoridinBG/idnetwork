@@ -9,17 +9,19 @@ import Foundation
 import PromiseKit
 
 extension CancellablePromise where T == (HTTPURLResponse, Data) {
-    func decoded<TypeToDecode: Decodable>(_ type: TypeToDecode.Type, decoder: JSONDecoder) -> CancellablePromise<TypeToDecode> {
-        return self.map({ (response, data) -> TypeToDecode in
-            return try decoder.decode(type, from: data)
+    func decoded<TypeToDecode: Decodable>(_ type: TypeToDecode.Type, decoder: JSONDecoder) -> CancellablePromise<(TypeToDecode, HTTPURLResponse)> {
+        return self.map({ (response, data) in
+            let decoded = try decoder.decode(type, from: data)
+            return (decoded, response)
         })
     }
 }
 
 extension Promise where T == (HTTPURLResponse, Data) {
-    func decoded<TypeToDecode: Decodable>(_ type: TypeToDecode.Type, decoder: JSONDecoder) -> Promise<TypeToDecode> {
-        return self.map({ (response, data) -> TypeToDecode in
-            return try decoder.decode(type, from: data)
+    func decoded<TypeToDecode: Decodable>(_ type: TypeToDecode.Type, decoder: JSONDecoder) -> Promise<(TypeToDecode, HTTPURLResponse)> {
+        return self.map({ (response, data) in
+            let decoded = try decoder.decode(type, from: data)
+            return (decoded, response)
         })
     }
 }
@@ -30,8 +32,7 @@ public class DefaultNetwork: Network {
     public init(provider: NetworkProvider = URLSessionNetworkProvider()) {
         self.provider = provider
     }
-    
-    public func requestDecoded<T: Decodable>(endpoint: Endpoint, decoder: JSONDecoder = JSONDecoder()) -> CancellablePromise<T> {
+    public func requestDecoded<T: Decodable>(endpoint: Endpoint, decoder: JSONDecoder = JSONDecoder()) -> CancellablePromise<(T, HTTPURLResponse)> {
         return provider.request(endpoint: endpoint)
             .decoded(T.self, decoder: decoder)
     }

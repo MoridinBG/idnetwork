@@ -9,6 +9,6 @@ import Foundation
 import PromiseKit
 
 public protocol Network {
-    func requestDecoded<T: Decodable>(endpoint: Endpoint, decoder: JSONDecoder) -> CancellablePromise<T>
+    func requestDecoded<T: Decodable>(endpoint: Endpoint, decoder: JSONDecoder) -> CancellablePromise<(T, HTTPURLResponse)>
     func request(endpoint: Endpoint) -> CancellablePromise<HTTPURLResponse>
 }
