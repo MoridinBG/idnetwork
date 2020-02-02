@@ -6,16 +6,21 @@
 //
 
 import Foundation
-import PromiseKit
+import Combine
 
 public protocol NetworkProvider {
-    func request(endpoint: Endpoint) -> CancellablePromise<(HTTPURLResponse, Data)>
+    func request(endpoint: Endpoint) -> AnyPublisher<(Data, HTTPURLResponse), NetworkError>
+    func requestDecoded<T: Decodable>(endpoint: Endpoint, decoder: JSONDecoder) -> AnyPublisher<(T, HTTPURLResponse), NetworkError>
+    
 }
 
 public enum NetworkError: Error {
     case statusCode(Int)
-    case badResponse
-    case badRequest
-    case noConnection
-    case error(Error)
+    case badResponse(URLError.Code?)
+    case badRequest(URLError.Code?)
+    case decodingFailed(Error)
+    case noConnection(URLError.Code?)
+    case authentication(URLError.Code?)
+    case timeout
+    case other(URLError?)
 }

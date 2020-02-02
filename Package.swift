@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "IDNetwork",
     platforms: [
-        .iOS("11.0")
+        .iOS("13.0")
     ],
     products: [
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
@@ -15,14 +15,13 @@ let package = Package(
             targets: ["IDNetwork"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/mxcl/PromiseKit", from: Version(7, 0, 0, prereleaseIdentifiers: ["alpha", "1"]))
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "IDNetwork",
-            dependencies: ["PromiseKit"]),
+            dependencies: []),
         .testTarget(
             name: "IDNetworkTests",
             dependencies: ["IDNetwork"]),

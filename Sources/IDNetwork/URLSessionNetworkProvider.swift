@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import PromiseKit
+import Combine
 
 extension URLSessionTask: Cancellable {
     public var isCancelled: Bool {
@@ -22,47 +22,94 @@ public class URLSessionNetworkProvider: NetworkProvider {
         self.session = URLSession(configuration: configuration)
     }
     
-    public func request(endpoint: Endpoint) -> CancellablePromise<(HTTPURLResponse, Data)> {
-        var task: URLSessionTask?
-        var reject: ((Error) -> Void)?
-        let promise: CancellablePromise<(HTTPURLResponse, Data)> = CancellablePromise { resolver in
-            guard let request = endpoint.request else {
-                resolver.reject(NetworkError.badRequest)
-                return
-            }
-            reject = resolver.reject
-            
-            task = session.dataTask(with: request) { data, response, error in
-                DispatchQueue.main.async {
-                    guard let data = data, let response = response as? HTTPURLResponse else {
-                        if let error = error as NSError? {
-                            if error.domain == NSURLErrorDomain && error.code < -1001 && error.code > -1011  {
-                                resolver.reject(NetworkError.noConnection)
-                            } else {
-                                resolver.reject(NetworkError.error(error))
-                            }
-                        } else {
-                            resolver.reject(NetworkError.badResponse)
-                        }
-                        return
+    
+    public func request(endpoint: Endpoint) -> AnyPublisher<(Data, HTTPURLResponse), NetworkError> {
+        guard let request = endpoint.request else {
+            return Fail<(Data, HTTPURLResponse), NetworkError>(error: .badRequest(nil)).eraseToAnyPublisher()
+        }
+        
+        return session
+            .dataTaskPublisher(for: request)
+            .mapError(NetworkError.init)
+            .tryMap { data, response -> (Data, HTTPURLResponse) in
+                    guard let httpResponse = response as? HTTPURLResponse else {
+                        throw NetworkError.badResponse(nil)
                     }
                     
-                    guard response.statusCode >= 200 && response.statusCode < 300 else {
-                        resolver.reject(NetworkError.statusCode(response.statusCode))
-                        return
+                    guard 200..<300 ~= httpResponse.statusCode  else {
+                        throw NetworkError.statusCode(httpResponse.statusCode)
                     }
-
-                    resolver.fulfill((response, data))
+                    
+                    return (data, httpResponse)
+            }.mapError { error -> NetworkError in
+                guard let error = error as? NetworkError else {
+                    assert(false, "Only NetworkErrors expected at this point")
+                    return .other(nil)
                 }
-            }
+                return error
+            }.eraseToAnyPublisher()
+    }
+
+    public func requestDecoded<T: Decodable>(endpoint: Endpoint, decoder: JSONDecoder) -> AnyPublisher<(T, HTTPURLResponse), NetworkError> {
+        return request(endpoint: endpoint)
+            .flatMap { data, response in
+                return Just(data)
+                    .decode(type: T.self, decoder: decoder)
+                    .mapError { error -> NetworkError in
+                        return .decodingFailed(error)
+                }.zip(Just(response).setFailureType(to: NetworkError.self))
+        }.eraseToAnyPublisher()
+    }
+}
+
+extension NetworkError {
+    init(_ urlError: URLError) {
+        switch urlError.code {
+        case .notConnectedToInternet,
+             .cannotFindHost,
+             .cannotConnectToHost,
+             .cannotLoadFromNetwork,
+             .internationalRoamingOff,
+             .dataNotAllowed,
+             .networkConnectionLost,
+             .secureConnectionFailed:
+            self = .noConnection(urlError.code)
             
-            task!.resume()
+        case .timedOut:
+            self = .timeout
+            
+        case .badURL,
+             .unsupportedURL,
+             .fileDoesNotExist,
+             .fileIsDirectory,
+             .noPermissionsToReadFile,
+             .clientCertificateRejected,
+             .clientCertificateRequired,
+             .requestBodyStreamExhausted:
+            self = .badRequest(urlError.code)
+            
+        case .badServerResponse,
+             .httpTooManyRedirects,
+             .resourceUnavailable,
+             .redirectToNonExistentLocation,
+             .zeroByteResource,
+             .cannotDecodeRawData,
+             .cannotDecodeContentData,
+             .cannotParseResponse,
+             .dataLengthExceedsMaximum,
+             .serverCertificateHasBadDate,
+             .serverCertificateUntrusted,
+             .serverCertificateHasUnknownRoot,
+             .serverCertificateNotYetValid,
+             .downloadDecodingFailedMidStream,
+             .downloadDecodingFailedToComplete:
+            self = .badResponse(urlError.code)
+            
+        case .userCancelledAuthentication, .userAuthenticationRequired:
+            self = .authentication(urlError.code)
+            
+        default:
+            self = .other(urlError)
         }
-        
-        if let task = task, let reject = reject {
-            promise.appendCancellable(task, reject: reject)
-        }
-        
-        return promise
     }
 }
